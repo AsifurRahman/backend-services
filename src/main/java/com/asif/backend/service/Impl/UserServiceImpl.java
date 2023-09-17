@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UserServiceImpl implements UserDetailsService, UserService {
@@ -58,5 +59,11 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     public UserResponseDto createUser(UserRequestDto requestDto) {
         User user = userMapper.convertToEntity(requestDto);
         return userMapper.convertToResponse(userRepository.save(user));
+    }
+
+
+    @Override
+    public Set<User> findAllUserByIdIn(Set<Long> userIds, Boolean isActive) {
+        return userRepository.findAllByIdInAndIsActive(userIds, isActive);
     }
 }

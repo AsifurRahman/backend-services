@@ -1,14 +1,20 @@
 package com.asif.backend.generic.controller;
 
 import com.asif.backend.common.Routes.Router;
+import com.asif.backend.common.constant.ApplicationConstant;
 import com.asif.backend.common.constant.Message;
 import com.asif.backend.generic.model.BaseEntity;
 import com.asif.backend.generic.payload.request.IDto;
 import com.asif.backend.generic.payload.response.MessageResponse;
+import com.asif.backend.generic.payload.response.PageData;
 import com.asif.backend.generic.service.IService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -48,5 +54,13 @@ public abstract class AbstractController<E extends BaseEntity, D extends IDto> i
     public ResponseEntity<MessageResponse> updateActiveStatus(@PathVariable Long id, Boolean isActive) {
         service.updateActiveStatus(id, isActive);
         return ResponseEntity.ok(new MessageResponse(Message.ACTIVE_STATUS_CHANGED_SUCCESSFULLY));
+    }
+
+    @Override
+    @GetMapping
+    public PageData getAll(@Nullable @RequestParam(value = "active", defaultValue = "true") Boolean isActive,
+                           @PageableDefault(sort = ApplicationConstant.DEFAULT_SORT,
+                                   direction = Sort.Direction.ASC) Pageable pageable) {
+        return service.getAll(isActive, pageable);
     }
 }

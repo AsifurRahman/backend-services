@@ -2,6 +2,7 @@ package com.asif.backend.config.authentication.security;
 
 import com.asif.backend.common.Routes.Router;
 import com.asif.backend.config.authentication.jwt.JwtAuthFilter;
+import com.asif.backend.config.authentication.service.CustomAccessDeniedHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,26 +29,34 @@ public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint entryPoint;
 
+    private final CustomAccessDeniedHandler accessDeniedHandler;
+
     private final UserDetailsService userDetailsService;
 
     private final PasswordEncoder passwordEncoder;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(request -> request.requestMatchers(Router.PUBLIC_ENDPOINTS)
-                        .permitAll().anyRequest().authenticated())
-                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(entryPoint))
-                .authenticationProvider(authenticationProvider()).addFilterBefore(
-                        authFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
 
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
+        return http
+                .cors(cors->cors.configurationSource(new CorsConfig()))
+                // disabling csrf since we won't use form login
+                .csrf(AbstractHttpConfigurer::disable)
+                // giving every permission to every request for public endpoint
+                .authorizeHttpRequests(request -> request.requestMatchers(Router.PUBLIC_ENDPOINTS)
+                // for everything else, the user has to be authenticated
+                .permitAll().anyRequest().authenticated())
+                // setting custom access denied handler for not authorized request
+                .exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler))
+                // setting custom entry point for unauthenticated request
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(entryPoint))
+                // setting auth provider of dao authentication of user details service
+                .authenticationProvider(authenticationProvider())
+                // adding the custom filter before UsernamePasswordAuthenticationFilter in the filter chain
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+                // setting stateless session, because we choose to implement Rest API
+                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).build();
+    }
 
 
     @Bean

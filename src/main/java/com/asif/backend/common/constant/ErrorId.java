@@ -14,5 +14,9 @@ public class ErrorId {
     public static final String INVALID_DATA_FORMAT_EXCEPTION = "exception103";
     public static final String JWT_TOKEN_MISSING = "auth102";
     public static final String  NAME_OR_SUB_TOPIC_NULL = "topic101";
+
+    public static final String DUPLICITY = "common106";
+
+    public static final String NOT_FOUND_DYNAMIC = "common108";
 }
 

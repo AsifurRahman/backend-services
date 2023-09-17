@@ -5,14 +5,19 @@ import com.asif.backend.common.constant.ErrorId;
 import com.asif.backend.common.exception.RmsServerException;
 import com.asif.backend.generic.model.BaseEntity;
 import com.asif.backend.generic.payload.request.IDto;
+import com.asif.backend.generic.payload.response.PageData;
 import com.asif.backend.generic.repository.AbstractRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -81,10 +86,31 @@ public abstract class AbstractService<E extends BaseEntity, D extends IDto> impl
         }
     }
 
+
+    @Override
+    public PageData getAll(Boolean isActive, Pageable pageable) {
+        Page<E> pagedData = repository.findAllByIsActive(isActive, pageable);
+        List<Object> models = pagedData.getContent().stream().map(this::convertToResponseDto)
+                .collect(Collectors.toList());
+        return PageData.builder()
+                .model(models)
+                .totalPages(pagedData.getTotalPages())
+                .totalElements(pagedData.getTotalElements())
+                .currentPage(pageable.getPageNumber() + 1)
+                .build();
+    }
+
+    @Override
+    public List<E> findAllByIds(Collection<Long> ids) {
+        return repository.findAllByIdIn(ids);
+    }
+
     protected abstract <T> T convertToResponseDto(E e);
 
     protected abstract E convertToEntity(D d);
 
     protected abstract E convertToEntity(D d, E entity);
+
+
 
 }
